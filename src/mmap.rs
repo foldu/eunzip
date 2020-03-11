@@ -1,7 +1,4 @@
-use std::fs::File;
-use std::io;
-use std::path::Path;
-use std::sync::Arc;
+use std::{fs::File, io, path::Path, sync::Arc};
 
 use fs2::FileExt;
 use memmap::Mmap;

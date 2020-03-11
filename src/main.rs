@@ -1,9 +1,11 @@
 use crate::mmap::{FileMmap, SharedFileMmap};
 use encoding::{label::encoding_from_whatwg_label, DecoderTrap, EncodingRef};
 use rayon::prelude::*;
-use std::fs::{self, File};
-use std::io::{self, BufWriter};
-use std::path::{Path, PathBuf};
+use std::{
+    fs::{self, File},
+    io::{self, BufWriter},
+    path::{Path, PathBuf},
+};
 use structopt::StructOpt;
 use zip::{read::ZipFile, ZipArchive};
 
