@@ -1,5 +1,11 @@
-use crate::mmap::{FileMmap, SharedFileMmap};
-use encoding::{label::encoding_from_whatwg_label, DecoderTrap, EncodingRef};
+mod cli;
+mod mmap;
+
+use crate::{
+    cli::Opt,
+    mmap::{FileMmap, SharedFileMmap},
+};
+use encoding::{DecoderTrap, EncodingRef};
 use rayon::prelude::*;
 use std::{
     fs::{self, File},
@@ -8,8 +14,6 @@ use std::{
 };
 use structopt::StructOpt;
 use zip::{read::ZipFile, ZipArchive};
-
-mod mmap;
 
 // TODO: handle SIGBUS
 
@@ -61,9 +65,9 @@ where
     })
 }
 
-fn traverse_zip_files_with<F>(archive: &mut ZipFileReader, f: F) -> Result<(), anyhow::Error>
+fn traverse_zip_files_with<F>(archive: &mut ZipFileReader, mut f: F) -> Result<(), anyhow::Error>
 where
-    F: Fn(&mut ZipFile) -> Result<(), anyhow::Error>,
+    F: FnMut(&mut ZipFile) -> Result<(), anyhow::Error>,
 {
     (0..archive.len())
         .map(|i| {
@@ -73,11 +77,11 @@ where
         .collect()
 }
 
-fn traverse_zip_archives_with<I, P, F>(paths: I, f: F) -> Result<(), anyhow::Error>
+fn traverse_zip_archives_with<I, P, F>(paths: I, mut f: F) -> Result<(), anyhow::Error>
 where
     I: IntoIterator<Item = P>,
     P: AsRef<Path>,
-    F: Fn(&mut ZipFileReader) -> Result<(), anyhow::Error>,
+    F: FnMut(&mut ZipFileReader) -> Result<(), anyhow::Error>,
 {
     paths
         .into_iter()
@@ -213,63 +217,6 @@ fn decode_zip_filename(enc: EncodingRef, file: &ZipFile) -> Result<String, anyho
                 e
             )
         })
-}
-
-fn parse_encoding(s: &str) -> Result<EncodingRef, anyhow::Error> {
-    encoding_from_whatwg_label(&s).ok_or_else(|| anyhow::format_err!("Unknown encoding: {}", s))
-}
-
-#[derive(StructOpt)]
-enum Opt {
-    #[structopt(name = "print-encodings", visible_alias = "p")]
-    /// Print all available encodings
-    PrintAll,
-
-    #[structopt(name = "test", visible_alias = "t")]
-    /// Just try all encodings on every single file of the zip and print the working ones
-    Try {
-        /// Your zips
-        #[structopt(parse(from_os_str))]
-        zips: Vec<PathBuf>,
-    },
-
-    #[structopt(name = "unzip", visible_alias = "x")]
-    /// Unzip mode
-    Unzip {
-        #[structopt(
-            short,
-            long,
-            parse(try_from_str = parse_encoding),
-            default_value = "utf-8"
-        )]
-        /// Encoding of file names in zip file
-        from: EncodingRef,
-
-        #[structopt(short, long, parse(from_os_str), default_value = ".")]
-        /// Output dir for extracted files
-        output: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// The zips you want to extract
-        zips: Vec<PathBuf>,
-    },
-
-    #[structopt(visible_alias = "l")]
-    /// List all files in zip
-    List {
-        /// Encoding of file names in zip file
-        #[structopt(
-            short = "f",
-            long = "from",
-            parse(try_from_str = parse_encoding),
-            default_value = "utf-8"
-        )]
-        from: EncodingRef,
-
-        #[structopt(parse(from_os_str))]
-        /// Zips
-        zips: Vec<PathBuf>,
-    },
 }
 
 fn main() {
