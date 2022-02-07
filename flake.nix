@@ -2,6 +2,7 @@
   description = "An unzip thing.";
 
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     naersk = {
       url = "github:nmattia/naersk";
@@ -9,12 +10,13 @@
     };
   };
 
-  outputs = { self, nixpkgs, naersk, flake-utils }@inputs: {
-    overlay = final: prev: {
+  outputs = { self, nixpkgs, naersk, flake-utils }@inputs: flake-utils.lib.eachDefaultSystem (
+    system:
+    let
+      pkgs = nixpkgs.legacyPackages.${system};
       eunzip =
         let
-          pkgs = nixpkgs.legacyPackages.${prev.system};
-          naersk-lib = naersk.lib."${prev.system}".override {
+          naersk-lib = naersk.lib."${system}".override {
             cargo = pkgs.cargo;
             rustc = pkgs.rustc;
           };
@@ -30,16 +32,12 @@
             installShellCompletion --zsh target/release/build/pickwp-*/out/_pickwp
           '';
         };
-    };
-  } // flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = import nixpkgs {
-        overlays = [ self.overlay ];
-        inherit system;
-      };
     in
     {
-      defaultPackage = pkgs.eunzip;
+      defaultPackage = eunzip;
+      packages = {
+        inherit eunzip;
+      };
     }
   );
 }
