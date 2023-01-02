@@ -47,8 +47,8 @@ fn run() -> Result<(), anyhow::Error> {
         }
 
         Opt::List { from, zips } => traverse_all_files_in_zips(zips.iter(), |file| {
-            let decoded = decode_zip_filename(from, &file)?;
-            println!("{}", decoded);
+            let decoded = decode_zip_filename(from, file)?;
+            println!("{decoded}");
             Ok(())
         }),
     }
@@ -60,21 +60,17 @@ where
     I: IntoIterator<Item = P>,
     F: Fn(&mut ZipFile) -> Result<(), anyhow::Error>,
 {
-    traverse_zip_archives_with(paths, |a| {
-        traverse_zip_files_with(a, |mut file| f(&mut file))
-    })
+    traverse_zip_archives_with(paths, |a| traverse_zip_files_with(a, |file| f(file)))
 }
 
 fn traverse_zip_files_with<F>(archive: &mut ZipFileReader, mut f: F) -> Result<(), anyhow::Error>
 where
     F: FnMut(&mut ZipFile) -> Result<(), anyhow::Error>,
 {
-    (0..archive.len())
-        .map(|i| {
-            let mut file = archive.by_index(i)?;
-            f(&mut file)
-        })
-        .collect()
+    (0..archive.len()).try_for_each(|i| {
+        let mut file = archive.by_index(i)?;
+        f(&mut file)
+    })
 }
 
 fn traverse_zip_archives_with<I, P, F>(paths: I, mut f: F) -> Result<(), anyhow::Error>
@@ -85,8 +81,7 @@ where
 {
     paths
         .into_iter()
-        .map(|path| open_zip(path).and_then(|mut z| f(&mut z)))
-        .collect()
+        .try_for_each(|path| open_zip(path).and_then(|mut z| f(&mut z)))
 }
 
 type ZipFileReader = ZipArchive<io::Cursor<SharedFileMmap>>;
@@ -97,7 +92,7 @@ where
 {
     let path = path.as_ref();
     let mmap =
-        FileMmap::open(&path).map_err(|e| anyhow::format_err!("Can't open {:?}: {}", path, e))?;
+        FileMmap::open(path).map_err(|e| anyhow::format_err!("Can't open {:?}: {}", path, e))?;
     let cur = io::Cursor::new(mmap.make_shared());
 
     ZipArchive::new(cur).map_err(|e| anyhow::format_err!("Can't open {:?} as zip: {}", path, e))
@@ -130,16 +125,13 @@ impl From<String> for SanitizedZipPath {
         let separator = ::std::path::MAIN_SEPARATOR;
         let opposite_separator = match separator {
             '/' => '\\',
-            '\\' | _ => '/',
+            _ => '/',
         };
         let filename = s.replace(&opposite_separator.to_string(), &separator.to_string());
 
         let ret = Path::new(&filename)
             .components()
-            .filter(|component| match *component {
-                ::std::path::Component::Normal(..) => true,
-                _ => false,
-            })
+            .filter(|component| matches!(component, std::path::Component::Normal(..)))
             .fold(PathBuf::new(), |mut path, ref cur| {
                 path.push(cur.as_os_str());
                 path
@@ -165,7 +157,7 @@ pub fn try_all_encodings(buf: &[u8]) {
 pub fn print_all_encodings() {
     for enc in encoding::all::encodings() {
         if let Some(name) = enc.whatwg_name() {
-            println!("{}", name);
+            println!("{name}");
         }
     }
 }
@@ -202,7 +194,7 @@ where
 
         io::copy(&mut zip, &mut out)?;
     }
-    println!("{:?}", dest);
+    println!("{dest:?}");
 
     Ok(())
 }
@@ -221,7 +213,7 @@ fn decode_zip_filename(enc: EncodingRef, file: &ZipFile) -> Result<String, anyho
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         ::std::process::exit(1);
     }
 }

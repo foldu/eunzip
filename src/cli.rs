@@ -53,5 +53,5 @@ pub enum Opt {
 }
 
 fn parse_encoding(s: &str) -> Result<EncodingRef, anyhow::Error> {
-    encoding_from_whatwg_label(&s).ok_or_else(|| anyhow::format_err!("Unknown encoding: {}", s))
+    encoding_from_whatwg_label(s).ok_or_else(|| anyhow::format_err!("Unknown encoding: {}", s))
 }
