@@ -16,7 +16,7 @@ impl SharedFileMmap {
 #[derive(Debug)]
 pub struct FileMmap {
     mmap: Mmap,
-    fh: File,
+    _fh: File,
 }
 
 impl FileMmap {
@@ -31,7 +31,7 @@ impl FileMmap {
         // The file lock above isn't reliable but it's better than nothing.
         // Don't even talk about SIGBUS
         let mmap = unsafe { Mmap::map(&fh) }?;
-        Ok(Self { mmap, fh })
+        Ok(Self { mmap, _fh: fh })
     }
 
     pub fn make_shared(self) -> SharedFileMmap {

@@ -5,6 +5,7 @@ use crate::{
     cli::Opt,
     mmap::{FileMmap, SharedFileMmap},
 };
+use clap::Parser;
 use encoding::{DecoderTrap, EncodingRef};
 use rayon::prelude::*;
 use std::{
@@ -12,13 +13,12 @@ use std::{
     io::{self, BufWriter},
     path::{Path, PathBuf},
 };
-use structopt::StructOpt;
 use zip::{read::ZipFile, ZipArchive};
 
 // TODO: handle SIGBUS
 
 fn run() -> Result<(), anyhow::Error> {
-    match Opt::from_args() {
+    match Opt::parse() {
         Opt::Try { zips } => traverse_all_files_in_zips(zips.iter(), |file| {
             try_all_encodings(file.name_raw());
             Ok(())
