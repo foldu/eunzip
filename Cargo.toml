@@ -6,17 +6,17 @@ edition = "2018"
 license = "Unlicense OR MIT"
 
 [dependencies]
-zip = { version = "0.6.4", default-features = false, features = ["deflate"] }
+zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
 encoding = "0.2.33"
-clap = { version = "4.2.1", features = ["derive"] }
-crossbeam-channel = "0.5.8"
-rayon = "1.7.0"
+clap = { version = "4.4.12", features = ["derive"] }
+crossbeam-channel = "0.5.10"
+rayon = "1.8.0"
 memmap = "0.7.0"
 fs2 = "0.4.3"
-anyhow = "1.0.70"
+anyhow = "1.0.79"
 
 [build-dependencies]
-clap = { version = "4.2.1", features = ["derive"] }
-clap_complete = "4.2.0"
+clap = { version = "4.4.12", features = ["derive"] }
+clap_complete = "4.4.5"
 encoding = "0.2.33"
-anyhow = "1.0.70"
+anyhow = "1.0.79"
