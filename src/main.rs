@@ -36,7 +36,7 @@ fn run() -> Result<(), anyhow::Error> {
                         let decoded = decode_zip_filename(from, &file)?;
                         extract_zip_entry_to(&output, &decoded.into(), &mut file)
                     })
-                    .collect::<Result<_, anyhow::Error>>()?;
+                    .collect::<Result<(), anyhow::Error>>()?;
             }
             Ok(())
         }
