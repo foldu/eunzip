@@ -2,7 +2,7 @@
 name = "eunzip"
 version = "0.1.0"
 authors = ["foldu <foldu@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "Unlicense OR MIT"
 
 [dependencies]
