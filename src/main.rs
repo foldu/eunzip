@@ -194,7 +194,7 @@ where
 
         io::copy(&mut zip, &mut out)?;
     }
-    println!("{dest:?}");
+    println!("{}", dest.display());
 
     Ok(())
 }
