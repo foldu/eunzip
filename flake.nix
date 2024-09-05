@@ -5,15 +5,21 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     crane.url = "github:ipetkov/crane";
-    crane.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, crane, flake-utils }@inputs: flake-utils.lib.eachDefaultSystem (
-    system:
-    let
-      pkgs = nixpkgs.legacyPackages.${system};
-      eunzip =
-        crane.lib.${system}.buildPackage {
+  outputs =
+    {
+      self,
+      nixpkgs,
+      crane,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        craneLib = crane.mkLib pkgs;
+        eunzip = craneLib.buildPackage {
           src = self;
           nativeBuildInputs = with pkgs; [
             installShellFiles
@@ -23,12 +29,12 @@
             installShellCompletion --zsh target/release/build/pickwp-*/out/_pickwp
           '';
         };
-    in
-    {
-      defaultPackage = eunzip;
-      packages = {
-        inherit eunzip;
-      };
-    }
-  );
+      in
+      {
+        defaultPackage = eunzip;
+        packages = {
+          inherit eunzip;
+        };
+      }
+    );
 }
