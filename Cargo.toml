@@ -6,7 +6,7 @@ edition = "2021"
 license = "Unlicense OR MIT"
 
 [dependencies]
-zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
+zip = { version = "2.2.0", default-features = false, features = ["deflate"] }
 encoding = "0.2.33"
 clap = { version = "4.4.12", features = ["derive"] }
 crossbeam-channel = "0.5.10"
